@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Medical Screening System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { background: #e74c3c; }
+        .strength-medium { background: #f39c12; }
+        .strength-strong { background: #27ae60; }
+
+        .signup-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .signup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .signup-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e53935;
+            font-size: 0.9em;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4caf50;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 30px 20px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">
+            <h1>🏥 MedScreen</h1>
+            <p>Create Your Account</p>
+        </div>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;"></div>
+
+        <form id="signupForm" method="POST" action="/signup">
+            <div class="form-group">
+                <label for="fullName">Full Name *</label>
+                <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" name="username" required placeholder="Choose a username" minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="role">Account Type</label>
+                    <select id="role" name="role">
+                        <option value="user">Patient</option>
+                        <option value="doctor">Healthcare Provider</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address (Optional)</label>
+                <input type="email" id="email" name="email" placeholder="your.email@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" required placeholder="Create a strong password" minlength="6">
+                <div class="password-strength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthBar"></div>
+                    </div>
+                    <span id="strengthText">Password strength will appear here</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password *</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password">
+            </div>
+
+            <button type="submit" class="signup-btn" id="signupBtn">
+                Create Account
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                Creating your account...
+            </div>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="/login">Sign In</a>
+        </div>
+    </div>
+
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        const signupBtn = document.getElementById('signupBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+
+        // Show messages from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const message = urlParams.get('message');
+
+        if (error) {
+            showError(decodeURIComponent(error));
+        }
+        if (message) {
+            showSuccess(decodeURIComponent(message));
+        }
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(msg) {
+            successMessage.textContent = msg;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            let feedback = '';
+
+            if (password.length >= 6) strength += 1;
+            if (password.length >= 8) strength += 1;
+            if (/[a-z]/.test(password)) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+            const percentage = (strength / 6) * 100;
+            strengthBar.style.width = percentage + '%';
+
+            if (strength <= 2) {
+                strengthBar.className = 'strength-fill strength-weak';
+                feedback = 'Weak password';
+            } else if (strength <= 4) {
+                strengthBar.className = 'strength-fill strength-medium';
+                feedback = 'Medium strength';
+            } else {
+                strengthBar.className = 'strength-fill strength-strong';
+                feedback = 'Strong password';
+            }
+
+            strengthText.textContent = feedback;
+            return strength >= 3;
+        }
+
+        passwordInput.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+            validatePasswords();
+        });
+
+        confirmPasswordInput.addEventListener('input', validatePasswords);
+
+        function validatePasswords() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (confirmPassword && password !== confirmPassword) {
+                confirmPasswordInput.setCustomValidity('Passwords do not match');
+                confirmPasswordInput.style.borderColor = '#e74c3c';
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+                confirmPasswordInput.style.borderColor = '#e0e0e0';
+            }
+        }
+
+        // Username validation
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value;
+            if (username.length > 0 && username.length < 3) {
+                this.setCustomValidity('Username must be at least 3 characters long');
+                this.style.borderColor = '#e74c3c';
+            } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                this.setCustomValidity('Username can only contain letters, numbers, and underscores');
+                this.style.borderColor = '#e74c3c';
+            } else {
+                this.setCustomValidity('');
+                this.style.borderColor = '#e0e0e0';
+            }
+        });
+
+        // Form submission
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Client-side validation
+            const formData = new FormData(this);
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            const username = formData.get('username');
+            const fullName = formData.get('fullName');
+
+            // Clear previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            // Validate required fields
+            if (!fullName || !username || !password || !confirmPassword) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            // Validate username length
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters long');
+                return;
+            }
+
+            // Validate password strength
+            if (!checkPasswordStrength(password)) {
+                showError('Please choose a stronger password');
+                return;
+            }
+
+            // Validate password match
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            // Show loading state
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating Account...';
+            loading.style.display = 'block';
+
+            // Submit form
+            fetch('/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Check if redirected to dashboard (success) or back to signup (error)
+                    if (response.url.includes('/dashboard')) {
+                        showSuccess('Account created successfully! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1500);
+                    } else {
+                        // Redirected back to signup with error
+                        window.location.href = response.url;
+                    }
+                } else {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                if (data) {
+                    // Handle any other response
+                    console.log('Signup response:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Signup error:', error);
+                showError('Network error. Please try again.');
+            })
+            .finally(() => {
+                // Reset form state
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+                loading.style.display = 'none';
+            });
+        });
+
+        // Real-time username availability check (optional enhancement)
+        let usernameTimeout;
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value;
+            if (username.length >= 3) {
+                clearTimeout(usernameTimeout);
+                usernameTimeout = setTimeout(() => {
+                    // You can add username availability check here
+                    // fetch(`/api/check-username/${username}`)...
+                }, 500);
+            }
+        });
+
+        // Auto-focus first field
+        document.getElementById('fullName').focus();
+    </script>
+</body>
+</html>

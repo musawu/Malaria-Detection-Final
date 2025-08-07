@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 30px;
+    }
+
+    .login-container {
+      background: white;
+      max-width: 400px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .role-selection {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .role-option {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .role-option.selected {
+      background-color: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+
+    <div class="role-selection">
+      <div class="role-option" data-role="user">User</div>
+      <div class="role-option" data-role="doctor">Doctor</div>
+    </div>
+
+    <form method="POST" action="/login">
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <input type="hidden" name="loginType" id="loginType" />
+      <button type="submit" id="loginBtn" disabled>Login</button>
+    </form>
+  </div>
+
+  <script>
+    const roleOptions = document.querySelectorAll('.role-option');
+    const loginTypeInput = document.getElementById('loginType');
+    const loginBtn = document.getElementById('loginBtn');
+
+    roleOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Remove selected class from all options
+        roleOptions.forEach(opt => opt.classList.remove('selected'));
+
+        // Add selected class to clicked option
+        option.classList.add('selected');
+
+        // Set the login type
+        const role = option.dataset.role;
+        loginTypeInput.value = role;
+
+        // Enable login button
+        loginBtn.disabled = false;
+
+        // Update placeholder
+        const usernameInput = document.querySelector('input[name="username"]');
+        if (role === 'doctor') {
+          usernameInput.placeholder = 'Username (e.g., doctor1)';
+        } else {
+          usernameInput.placeholder = 'Username (e.g., user)';
+        }
+      });
+    });
+
+    // Show error message from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    if (error) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = decodeURIComponent(error);
+      document.querySelector('.login-container').insertBefore(errorDiv, document.querySelector('form'));
+    }
+
+    // Prefill credentials after signup
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('prefill') === 'true') {
+        const username = params.get('username') || '';
+        const password = params.get('password') || '';
+        const loginType = params.get('loginType') || '';
+
+        document.querySelector('input[name="username"]').value = username;
+        document.querySelector('input[name="password"]').value = password;
+        loginTypeInput.value = loginType;
+
+        const selectedOption = document.querySelector(`.role-option[data-role="${loginType}"]`);
+        if (selectedOption) {
+          selectedOption.classList.add('selected');
+          loginBtn.disabled = false;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

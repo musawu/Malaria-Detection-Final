@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Dashboard - Professional Medical Interface</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .dashboard-container {
+      min-height: 100vh;
+      display: grid;
+      grid-template-areas: 
+        "sidebar header"
+        "sidebar main";
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    .sidebar {
+      grid-area: sidebar;
+      background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+      color: white;
+      padding: 2rem 0;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23ffffff" stroke-width="0.5" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      pointer-events: none;
+    }
+
+    .doctor-profile {
+      padding: 0 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .doctor-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      margin: 0 auto 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .doctor-avatar:hover {
+      transform: scale(1.05);
+    }
+
+    .doctor-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .doctor-specialty, .doctor-location {
+      opacity: 0.9;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .nav-menu {
+      padding: 0 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateX(8px);
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #fbbf24;
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-item:hover::before, .nav-item.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-icon {
+      margin-right: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .header {
+      grid-area: header;
+      background: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .header-title {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #1e40af, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .notification-bell {
+      position: relative;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-bell:hover {
+      background: #1e40af;
+      border-color: #1e40af;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .logout-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+
+    .main-content {
+      grid-area: main;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      color: #1e40af;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-change {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+
+    .stat-change.positive {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .stat-change.negative {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .chart-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .chart-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 2px;
+    }
+
+    .assessment-list {
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 1rem;
+    }
+
+    .assessment-item {
+      background: white;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .assessment-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .assessment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .patient-info {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .assessment-time {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .risk-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .risk-high {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+    }
+
+    .risk-medium {
+      background: linear-gradient(135deg, #fef3c7, #fed7aa);
+      color: #d97706;
+      border: 1px solid #fbbf24;
+    }
+
+    .risk-low {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #16a34a;
+      border: 1px solid #4ade80;
+    }
+
+    .prediction-box {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 1px solid #7dd3fc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .prediction-text {
+      color: #0369a1;
+      font-weight: 600;
+    }
+
+    .confidence-bar {
+      background: #e2e8f0;
+      border-radius: 10px;
+      height: 8px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .symptoms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .symptom-tag {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      text-align: center;
+      font-weight: 500;
+      transition: transform 0.2s ease;
+    }
+
+    .symptom-tag:hover {
+      transform: scale(1.05);
+    }
+
+    .symptom-positive {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #dc2626;
+      border: 1px solid #f87171;
+    }
+
+    .symptom-negative {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #16a34a;
+      border: 1px solid #4ade80;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem;
+      color: #64748b;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #e2e8f0;
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem;
+      color: #64748b;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #dc2626;
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid #f87171;
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .patient-message {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 1px solid #7dd3fc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .patient-message-label {
+      font-weight: 600;
+      color: #0369a1;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        grid-template-areas: 
+          "header"
+          "main";
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .main-content {
+        padding: 1rem;
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="doctor-profile">
+        <div id="doctorAvatar" class="doctor-avatar">👨‍⚕️</div>
+        <div id="doctorName" class="doctor-name">Loading...</div>
+        <div id="doctorSpecialty" class="doctor-specialty">Loading...</div>
+        <div id="doctorLocation" class="doctor-location">Loading...</div>
+      </div>
+      
+      <nav class="nav-menu">
+        <div class="nav-item active">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">👥</span>
+          Patients
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">📋</span>
+          Assessments
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">📈</span>
+          Analytics
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </div>
+      </nav>
+    </aside>
+
+    <header class="header">
+      <h1 class="header-title">Medical Dashboard</h1>
+      <div class="header-actions">
+        <div class="notification-bell">
+          🔔
+          <div id="notificationBadge" class="notification-badge">0</div>
+        </div>
+        <form action="/logout" method="POST" style="display: inline;">
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">📊</div>
+          </div>
+          <div class="stat-value" id="totalAssessments">0</div>
+          <div class="stat-label">Total Assessments</div>
+          <div class="stat-change positive" id="totalChange">+0% from last week</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">⏳</div>
+          </div>
+          <div class="stat-value" id="pendingReviews">0</div>
+          <div class="stat-label">Pending Reviews</div>
+          <div class="stat-change negative" id="pendingChange">Needs attention</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">🚨</div>
+          </div>
+          <div class="stat-value" id="highRiskCases">0</div>
+          <div class="stat-label">High Risk Cases</div>
+          <div class="stat-change negative" id="riskChange">Priority review</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">📅</div>
+          </div>
+          <div class="stat-value" id="todayAssessments">0</div>
+          <div class="stat-label">Today's Assessments</div>
+          <div class="stat-change positive" id="todayChange">+0 today</div>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="chart-container">
+          <h3 class="chart-title">📈 Weekly Assessment Trends</h3>
+          <canvas id="assessmentChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">🎯 Risk Level Distribution</h3>
+          <canvas id="riskChart" width="300" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 class="chart-title">🏥 Recent Patient Assessments</h3>
+        <div id="assessmentContainer" class="assessment-list">
+          <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading patient assessments...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let currentDoctor = null;
+    let doctorAssessments = [];
+    let assessmentChart = null;
+    let riskChart = null;
+
+    // Initialize charts
+    function initializeCharts() {
+      // Assessment trend chart
+      const assessmentCtx = document.getElementById('assessmentChart').getContext('2d');
+      assessmentChart = new Chart(assessmentCtx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Assessments',
+            data: [12, 19, 8, 15, 7, 11, 14],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(148, 163, 184, 0.1)'
+              },
+              ticks: {
+                color: '#64748b'
+              }
+            },
+            x: {
+              grid: {
+                color: 'rgba(148, 163, 184, 0.1)'
+              },
+              ticks: {
+                color: '#64748b'
+              }
+            }
+          }
+        }
+      });
+
+      // Risk distribution chart
+      const riskCtx = document.getElementById('riskChart').getContext('2d');
+      riskChart = new Chart(riskCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+          datasets: [{
+            data: [65, 25, 10],
+            backgroundColor: [
+              '#10b981',
+              '#f59e0b',
+              '#ef4444'
+            ],
+            borderColor: [
+              '#059669',
+              '#d97706',
+              '#dc2626'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                color: '#64748b',
+                font: {
+                  size: 12,
+                  weight: 500
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    async function loadDoctorInfo() {
+      try {
+        // Simulate API call - replace with actual endpoint
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock doctor data
+        const doctor = {
+          id: 'doc-123',
+          name: 'Dr. Sarah Johnson',
+          specialty: 'Internal Medicine',
+          location: 'Metropolitan General Hospital',
+          photo: null
+        };
+        
+        currentDoctor = doctor;
+        updateDoctorDisplay(doctor);
+        await loadAssessments(doctor.id);
+        
+      } catch (error) {
+        console.error('Error loading doctor info:', error);
+        document.getElementById('doctorName').textContent = 'Dr. Sarah Johnson';
+        document.getElementById('assessmentContainer').innerHTML = 
+          '<div class="error-message">Failed to load doctor information. Please refresh the page.</div>';
+      }
+    }
+
+    function updateDoctorDisplay(doctor) {
+      document.getElementById('doctorName').textContent = doctor.name;
+      document.getElementById('doctorSpecialty').innerHTML = `<strong>Specialty:</strong> ${doctor.specialty}`;
+      document.getElementById('doctorLocation').innerHTML = `<strong>Location:</strong> ${doctor.location}`;
+      
+      if (doctor.photo) {
+        document.getElementById('doctorAvatar').innerHTML = 
+          `<img src="${doctor.photo}" alt="${doctor.name}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+      }
+    }
+
+    async function loadAssessments(doctorId) {
+      const container = document.getElementById("assessmentContainer");
+
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Mock assessment data
+        const mockAssessments = [
+          {
+            id: 1,
+            from: 'John Smith',
+            timestamp: new Date().toISOString(),
+            riskLevel: 'High',
+            prediction: 'Possible cardiovascular concern requiring immediate attention',
+            confidence: 0.87,
+            symptoms: {
+              'Chest Pain': 'yes',
+              'Shortness of Breath': 'yes',
+              'Dizziness': 'no',
+              'Fatigue': 'yes'
+            },
+            patientMessage: 'Experiencing severe chest pain for the past 2 hours. Pain radiates to left arm.',
+            status: 'pending'
+          },
+          {
+            id: 2,
+            from: 'Maria Garcia',
+            timestamp: new Date(Date.now() - 86400000).toISOString(),
+            riskLevel: 'Medium',
+            prediction: 'Mild respiratory infection - monitor symptoms',
+            confidence: 0.72,
+            symptoms: {
+              'Cough': 'yes',
+              'Fever': 'yes',
+              'Headache': 'no',
+              'Sore Throat': 'yes'
+            },
+            patientMessage: 'Persistent cough and mild fever for 3 days.',
+            status: 'reviewed'
+          },
+          {
+            id: 3,
+            from: 'Robert Chen',
+            timestamp: new Date(Date.now() - 172800000).toISOString(),
+            riskLevel: 'Low',
+            prediction: 'Routine checkup - no immediate concerns',
+            confidence: 0.94,
+            symptoms: {
+              'General Wellness': 'good',
+              'Energy Level': 'normal',
+              'Sleep': 'good',
+              'Appetite': 'normal'
+            },
+            patientMessage: 'Regular health checkup. Feeling well overall.',
+            status: 'completed'
+          }
+        ];
+        
+        doctorAssessments = mockAssessments;
+        updateStats(mockAssessments);
+        displayAssessments(mockAssessments, container);
+        updateChartData(mockAssessments);
+        
+      } catch (error) {
+        console.error('Error loading assessments:', error);
+        container.innerHTML = '<div class="error-message">Failed to load assessments. Please try again.</div>';
+      }
+    }
+
+    function updateStats(assessments) {
+      const total = assessments.length;
+      const pending = assessments.filter(a => a.status === 'pending').length;
+      const highRisk = assessments.filter(a => a.riskLevel === 'High').length;
+      
+      const today = new Date().toDateString();
+      const todayCount = assessments.filter(a => 
+        new Date(a.timestamp).toDateString() === today
+      ).length;
+
+      // Animate number updates
+      animateNumber('totalAssessments', 0, total, 1000);
+      animateNumber('pendingReviews', 0, pending, 1200);
+      animateNumber('highRiskCases', 0, highRisk, 1400);
+      animateNumber('todayAssessments', 0, todayCount, 1600);
+
+      // Update notification badge
+      document.getElementById('notificationBadge').textContent = pending;
+      
+      // Update change indicators
+      document.getElementById('totalChange').textContent = `+${Math.floor(Math.random() * 20)}% from last week`;
+      document.getElementById('todayChange').textContent = `+${todayCount} today`;
+    }
+
+    function animateNumber(elementId, start, end, duration) {
+      const element = document.getElementById(elementId);
+      const increment = (end - start) / (duration / 16);
+      let current = start;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= end) {
+          current = end;
+          clearInterval(timer);
+        }
+        element.textContent = Math.floor(current);
+      }, 16);
+    }
+
+    function updateChartData(assessments) {
+      // Update assessment trend (mock data for demo)
+      const weeklyData = [12, 19, 8, 15, 7, 11, 14];
+      assessmentChart.data.datasets[0].data = weeklyData;
+      assessmentChart.update('active');
+
+      // Update risk distribution
+      const riskCounts = {
+        low: assessments.filter(a => a.riskLevel === 'Low').length,
+        medium: assessments.filter(a => a.riskLevel === 'Medium').length,
+        high: assessments.filter(a => a.riskLevel === 'High').length
+      };
+      
+      const total = riskCounts.low + riskCounts.medium + riskCounts.high;
+      if (total > 0) {
+        riskChart.data.datasets[0].data = [
+          Math.round((riskCounts.low / total) * 100),
+          Math.round((riskCounts.medium / total) * 100),
+          Math.round((riskCounts.high / total) * 100)
+        ];
+        riskChart.update('active');
+      }
+    }
+
+    function displayAssessments(data, container) {
+      if (!data.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h3>No assessments yet</h3>
+            <p>Patient assessments will appear here when submitted.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = "";
+      
+      const sortedAssessments = data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      sortedAssessments.forEach((assessment, index) => {
+        const card = document.createElement("div");
+        card.className = "assessment-item";
+        
+        const date = new Date(assessment.timestamp).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        const riskClass = assessment.riskLevel ? 
+          `risk-${assessment.riskLevel.toLowerCase()}` : 'risk-medium';
+        
+        let symptomsHtml = '';
+        if (assessment.symptoms && Object.keys(assessment.symptoms).length > 0) {
+          const symptomItems = Object.entries(assessment.symptoms).map(([symptom, value]) => {
+            const isPositive = value === 'yes' || value === 'positive' || value === 'present';
+            const tagClass = isPositive ? 'symptom-positive' : 'symptom-negative';
+            return `<div class="symptom-tag ${tagClass}">${symptom}: ${value}</div>`;
+          }).join('');
+          
+          symptomsHtml = `
+            <div class="symptoms-grid">${symptomItems}</div>
+          `;
+        }
+        
+        let patientMessageHtml = '';
+        if (assessment.patientMessage) {
+          patientMessageHtml = `
+            <div class="patient-message">
+              <div class="patient-message-label">💬 Patient Message:</div>
+              <div>${assessment.patientMessage}</div>
+            </div>
+          `;
+        }
+        
+        const confidencePercent = Math.round((assessment.confidence || 0) * 100);
+        
+        card.innerHTML = `
+          <div class="assessment-header">
+            <div>
+              <div class="patient-info">👤 ${assessment.from}</div>
+              <div class="assessment-time">${date}</div>
+            </div>
+            <div class="risk-badge ${riskClass}">
+              ${assessment.riskLevel || 'Medium'} Risk
+            </div>
+          </div>
+          
+          ${assessment.prediction ? `
+            <div class="prediction-box">
+              <div class="prediction-text">🤖 AI Assessment: ${assessment.prediction}</div>
+              <div class="confidence-bar">
+                <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+              </div>
+              <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #0369a1;">
+                Confidence: ${confidencePercent}%
+              </div>
+            </div>
+          ` : ''}
+          
+          ${symptomsHtml}
+          ${patientMessageHtml}
+        `;
+        
+        container.appendChild(card);
+        
+        // Add entrance animation
+        setTimeout(() => {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(20px)';
+          card.style.transition = 'all 0.5s ease';
+          setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, index * 100);
+        }, 0);
+      });
+    }
+
+    // Add smooth scrolling to navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Add notification bell animation
+    document.querySelector('.notification-bell').addEventListener('click', function() {
+      this.style.animation = 'none';
+      setTimeout(() => {
+        this.style.animation = 'pulse 0.5s ease';
+      }, 10);
+    });
+
+    // Initialize everything when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeCharts();
+      loadDoctorInfo();
+      
+      // Add loading animation to stat cards
+      document.querySelectorAll('.stat-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+          card.style.transition = 'all 0.6s ease';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 150);
+      });
+    });
+
+    // Auto-refresh data every 30 seconds
+    setInterval(() => {
+      if (currentDoctor) {
+        loadAssessments(currentDoctor.id);
+      }
+    }, 30000);
+
+    // Add real-time updates simulation
+    function simulateRealTimeUpdate() {
+      const notificationBadge = document.getElementById('notificationBadge');
+      const currentCount = parseInt(notificationBadge.textContent);
+      
+      if (Math.random() > 0.7) { // 30% chance of new notification
+        notificationBadge.textContent = currentCount + 1;
+        notificationBadge.style.animation = 'pulse 1s ease';
+        
+        // Show brief notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+          z-index: 1000;
+          transform: translateX(400px);
+          transition: transform 0.3s ease;
+        `;
+        notification.textContent = '🔔 New patient assessment received';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        setTimeout(() => {
+          notification.style.transform = 'translateX(400px)';
+          setTimeout(() => document.body.removeChild(notification), 300);
+        }, 3000);
+      }
+    }
+
+    // Simulate real-time updates every 10 seconds
+    setInterval(simulateRealTimeUpdate, 10000);
+  </script>
+</body>
+</html>
