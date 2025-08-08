@@ -1,19 +1,15 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "./server.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/"
-      }
-    ],
-    "env": {
-      "NODE_ENV": "production",
-      "HF_MODEL_URL": "https://api-inference.huggingface.co/models/syntichemusawu/MalariaD"
+  "version": 2,
+  "functions": {
+    "server.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ]
+}
