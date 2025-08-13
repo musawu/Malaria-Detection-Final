@@ -650,7 +650,7 @@ app.get('/dashboard', requireAuth, (req, res) => {
 
 // Admin Dashboard Route
 app.get('/admin', requireAdmin, async (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // API endpoint to get dashboard data
